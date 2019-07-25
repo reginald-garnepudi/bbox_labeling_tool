@@ -94,9 +94,9 @@
             listenImageSelect()
             listenClassLoad()
             listenClassSelect()
-            listenBboxLoad()
+            //listenBboxLoad()
             listenBboxSave()
-            listenBboxRestore()
+            //listenBboxRestore()
             listenKeyboard()
         }
     }
@@ -762,8 +762,8 @@
                             setCurrentClass()
 
                             if (Object.keys(images).length > 0) {
-                                document.getElementById("bboxes").disabled = false
-                                document.getElementById("restoreBboxes").disabled = false
+                                // document.getElementById("bboxes").disabled = false
+                                // document.getElementById("restoreBboxes").disabled = false
                             }
                         }
                     })
@@ -802,51 +802,51 @@
         })
     }
 
-    const listenBboxLoad = () => {
-        const bboxesElement = document.getElementById("bboxes")
+    // const listenBboxLoad = () => {
+    //     const bboxesElement = document.getElementById("bboxes")
 
-        bboxesElement.addEventListener("click", () => {
-            bboxesElement.value = null
-        })
+    //     bboxesElement.addEventListener("click", () => {
+    //         bboxesElement.value = null
+    //     })
 
-        bboxesElement.addEventListener("change", (event) => {
-            const files = event.target.files
+    //     bboxesElement.addEventListener("change", (event) => {
+    //         const files = event.target.files
 
-            if (files.length > 0) {
-                resetBboxes()
+    //         if (files.length > 0) {
+    //             resetBboxes()
 
-                for (let i = 0; i < files.length; i++) {
-                    const reader = new FileReader()
+    //             for (let i = 0; i < files.length; i++) {
+    //                 const reader = new FileReader()
 
-                    const extension = files[i].name.split(".").pop()
+    //                 const extension = files[i].name.split(".").pop()
 
-                    reader.addEventListener("load", () => {
-                        if (extension === "txt" || extension === "xml" || extension === "json") {
-                            storeBbox(files[i].name, reader.result)
-                        } else {
-                            const zip = new JSZip()
+    //                 reader.addEventListener("load", () => {
+    //                     if (extension === "txt" || extension === "xml" || extension === "json") {
+    //                         storeBbox(files[i].name, reader.result)
+    //                     } else {
+    //                         const zip = new JSZip()
 
-                            zip.loadAsync(reader.result)
-                                .then((result) => {
-                                    for (let filename in result.files) {
-                                        result.file(filename).async("string")
-                                            .then((text) => {
-                                                storeBbox(filename, text)
-                                            })
-                                    }
-                                })
-                        }
-                    })
+    //                         zip.loadAsync(reader.result)
+    //                             .then((result) => {
+    //                                 for (let filename in result.files) {
+    //                                     result.file(filename).async("string")
+    //                                         .then((text) => {
+    //                                             storeBbox(filename, text)
+    //                                         })
+    //                                 }
+    //                             })
+    //                     }
+    //                 })
 
-                    if (extension === "txt" || extension === "xml"  || extension === "json") {
-                        reader.readAsText(files[i])
-                    } else {
-                        reader.readAsArrayBuffer(event.target.files[i])
-                    }
-                }
-            }
-        })
-    }
+    //                 if (extension === "txt" || extension === "xml"  || extension === "json") {
+    //                     reader.readAsText(files[i])
+    //                 } else {
+    //                     reader.readAsArrayBuffer(event.target.files[i])
+    //                 }
+    //             }
+    //         }
+    //     })
+    // }
 
     const resetBboxes = () => {
         bboxes = {}
@@ -912,10 +912,17 @@
 
     const listenBboxSave = () => {
         document.getElementById("saveBboxes").addEventListener("click", () => {
-            const result = []
-
+            let result = []
+            console.log(bboxes)
             for (let imageName in bboxes) {
                 const image = images[imageName]
+
+                let annotation = {
+                    "name": imageName,
+                    "boxes": [],
+                    "width": image.width,
+                    "height": image.height
+                }
 
                 for (let className in bboxes[imageName]) {
                     for (let i = 0; i < bboxes[imageName][className].length; i++) {
@@ -930,28 +937,39 @@
                         const xmax = xmin + width
                         const ymax = ymin + height
 
-                        result.push(`${imageName},${xmin},${xmax},${ymin},${ymax},${classes[className]}\n`)
+                        let box = {
+                            "x1": xmin,
+                            "y1": ymin,
+                            "x2": xmax,
+                            "y2": ymax,
+                            "class": className
+                        }
+
+                        annotation['boxes'].push(box)
+
+                        //result.push(`${imageName},${xmin},${xmax},${ymin},${ymax},${classes[className]}\n`)
                     }
                 }
+                result.push(annotation)
             }
 
-            var blob = new Blob(result, {type: "text/plain;charset=utf-8"});
+            var blob = new Blob([JSON.stringify(result)], {type: "text/json;charset=utf-8"});
 
-            saveAs(blob, "bboxes.csv")
+            saveAs(blob, "bboxes.json")
         })
     }
 
     
 
-    const listenBboxRestore = () => {
-        document.getElementById("restoreBboxes").addEventListener("click", () => {
-            const item = localStorage.getItem("bboxes")
+    // const listenBboxRestore = () => {
+    //     document.getElementById("restoreBboxes").addEventListener("click", () => {
+    //         const item = localStorage.getItem("bboxes")
 
-            if (item) {
-                bboxes = JSON.parse(item)
-            }
-        })
-    }
+    //         if (item) {
+    //             bboxes = JSON.parse(item)
+    //         }
+    //     })
+    // }
 
     const listenKeyboard = () => {
         const imageList = document.getElementById("imageList")
