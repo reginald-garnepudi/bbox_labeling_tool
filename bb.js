@@ -929,8 +929,8 @@
                         const bbox = bboxes[imageName][className][i]
 
                         // Prepare data for ssd format
-                        const xmin = (bbox.x + bbox.width / 2) / image.width
-                        const ymin = (bbox.y + bbox.height / 2) / image.height
+                        const xmin = bbox.x / image.width
+                        const ymin = bbox.y / image.height
                         const width = bbox.width / image.width
                         const height = bbox.height / image.height
 
